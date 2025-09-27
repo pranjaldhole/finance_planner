@@ -339,17 +339,25 @@ function generatePDF() {
     pdf.text('Loan Summary', 20, 40);
     pdf.setFontSize(12);
     
+    // Get monthly salary from the form if present
+    let monthlySalary = '';
+    const salaryElem = document.getElementById('monthly_salary');
+    if (salaryElem) {
+        monthlySalary = salaryElem.value ? formatCurrency(salaryElem.value) : '';
+    }
+
     const details = [
         `Property Value: ${formatCurrency(document.getElementById('property_value').value)}`,
         `Own Funds: ${formatCurrency(document.getElementById('own_funds').value)}`,
         `Loan Amount: ${formatCurrency(currentLoanDetails.loan_amount)}`,
         `Annual Interest Rate: ${currentLoanDetails.annual_interest_rate.toFixed(2)}%`,
         `Monthly Payment: ${formatCurrency(currentLoanDetails.monthly_payment)}`,
+        monthlySalary ? `Monthly Salary: ${monthlySalary}` : '',
         `Original Loan Term: ${(currentLoanDetails.original_term_months/12).toFixed(1)} years`,
         `Actual Loan Term: ${(currentLoanDetails.amortization_schedule.length/12).toFixed(1)} years`,
         `Total of Payments: ${formatCurrency(currentLoanDetails.total_payment)}`,
         `Total Interest: ${formatCurrency(currentLoanDetails.total_interest)}`
-    ];
+    ].filter(Boolean);
 
     if (currentLoanDetails.annual_extra_payment > 0) {
         details.push(`Annual Extra Payment: ${formatCurrency(currentLoanDetails.annual_extra_payment)}`);

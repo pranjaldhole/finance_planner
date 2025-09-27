@@ -1,0 +1,22 @@
+[project]
+name = "finance-planner"
+version = "0.1.0"
+description = "A personal finance planning application."
+readme = "README.md"
+requires-python = ">=3.13"
+authors = [{ name = "Pranjal", email = "dhole.pranjal@gmail.com" }]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "numpy>=2.3.3",
+    "flask>=2.0.1",
+    "matplotlib>=3.4.0",
+    "fpdf2>=2.5.1",
+    "pytest>=6.2.0",
+]
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+

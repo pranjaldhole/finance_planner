@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loan Calculation Results</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            padding-top: 2rem;
+            background-color: #f8f9fa;
+        }
+        .results-container {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        }
+        .plot-container {
+            margin-top: 2rem;
+            text-align: center;
+        }
+        .plot-img {
+            max-width: 100%;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-10">
+                <div class="results-container">
+                    <h1 class="text-center mb-4">Loan Calculation Results</h1>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h3>Loan Details</h3>
+                            <ul class="list-group">
+                                <li class="list-group-item">Loan Amount: €{{ "{:,.2f}".format(loan_details.loan_amount) }}</li>
+                                <li class="list-group-item">Annual Interest Rate: {{ "%.2f"|format(loan_details.annual_interest_rate) }}%</li>
+                                <li class="list-group-item">Monthly Payment: €{{ "{:,.2f}".format(loan_details.monthly_payment) }}</li>
+                                <li class="list-group-item">Original Term: {{ "%.1f"|format(loan_details.original_term_months/12) }} years</li>
+                                <li class="list-group-item">Actual Term: {{ "%.1f"|format(loan_details.amortization_schedule|length/12) }} years</li>
+                                {% if fixed_period_years %}
+                                <li class="list-group-item">Fixed Interest Period: {{ fixed_period_years }} years</li>
+                                {% endif %}
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h3>Payment Summary</h3>
+                            <ul class="list-group">
+                                <li class="list-group-item">Total Payment: €{{ "{:,.2f}".format(loan_details.total_payment) }}</li>
+                                <li class="list-group-item">Total Interest: €{{ "{:,.2f}".format(loan_details.total_interest) }}</li>
+                                {% if loan_details.annual_extra_payment > 0 %}
+                                <li class="list-group-item">Annual Extra Payment: €{{ "{:,.2f}".format(loan_details.annual_extra_payment) }}</li>
+                                {% endif %}
+                                {% if loan_details.fixed_period_remaining is defined %}
+                                <li class="list-group-item">Remaining After Fixed Period: €{{ "{:,.2f}".format(loan_details.fixed_period_remaining) }}</li>
+                                {% endif %}
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="plot-container">
+                        <h3>Loan Amortization Chart</h3>
+                        <img src="data:image/png;base64,{{ plot_data }}" alt="Loan Amortization Chart" class="plot-img">
+                    </div>
+
+                    <div class="mt-4">
+                        <h3>Yearly Summary</h3>
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Year</th>
+                                        <th>Total Principal</th>
+                                        <th>Total Interest</th>
+                                        <th>Year-End Balance</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% set yearly_totals = {} %}
+                                    {% for payment in loan_details.amortization_schedule %}
+                                        {% set year = ((payment.month - 1) // 12) + 1 %}
+                                        {% if year not in yearly_totals %}
+                                            {% set _ = yearly_totals.update({year: {'principal': 0, 'interest': 0, 'balance': payment.remaining_balance}}) %}
+                                        {% endif %}
+                                        {% set _ = yearly_totals[year].update({
+                                            'principal': yearly_totals[year]['principal'] + payment.principal_payment,
+                                            'interest': yearly_totals[year]['interest'] + payment.interest_payment,
+                                            'balance': payment.remaining_balance
+                                        }) %}
+                                        {% if loop.last or (loop.index % 12) == 0 %}
+                                            <tr>
+                                                <td>Year {{ year }}</td>
+                                                <td>€{{ "{:,.2f}".format(yearly_totals[year]['principal']) }}</td>
+                                                <td>€{{ "{:,.2f}".format(yearly_totals[year]['interest']) }}</td>
+                                                <td>€{{ "{:,.2f}".format(yearly_totals[year]['balance']) }}</td>
+                                            </tr>
+                                        {% endif %}
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <h3>Monthly Amortization Schedule</h3>
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Month</th>
+                                        <th>Principal</th>
+                                        <th>Interest</th>
+                                        <th>Balance</th>
+                                        {% if loan_details.annual_extra_payment > 0 %}
+                                        <th>Extra Payment</th>
+                                        {% endif %}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for payment in loan_details.amortization_schedule %}
+                                    <tr {% if payment.month % 12 == 0 %}class="table-info"{% endif %}>
+                                        <td>{{ payment.month }}</td>
+                                        <td>€{{ "{:,.2f}".format(payment.principal_payment) }}</td>
+                                        <td>€{{ "{:,.2f}".format(payment.interest_payment) }}</td>
+                                        <td>€{{ "{:,.2f}".format(payment.remaining_balance) }}</td>
+                                        {% if loan_details.annual_extra_payment > 0 %}
+                                        <td>€{{ "{:,.2f}".format(payment.extra_payment) }}</td>
+                                        {% endif %}
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{{ url_for('index') }}" class="btn btn-secondary">New Calculation</a>
+                        <form action="{{ url_for('generate_pdf') }}" method="post" style="display: inline;" id="pdfForm">
+                            <input type="hidden" name="loan_amount" value="{{ loan_details.loan_amount }}">
+                            <input type="hidden" name="annual_interest_rate" value="{{ loan_details.annual_interest_rate }}">
+                            <input type="hidden" name="monthly_payment" value="{{ loan_details.monthly_payment }}">
+                            <input type="hidden" name="include_extra" value="{{ 'true' if loan_details.annual_extra_payment > 0 else 'false' }}">
+                            {% if fixed_period_years %}
+                            <input type="hidden" name="fixed_period" value="{{ fixed_period_years }}">
+                            {% endif %}
+                            <button type="submit" class="btn btn-primary">Download PDF Report</button>
+                        </form>
+                    </div>
+                    <script>
+                    document.getElementById('pdfForm').onsubmit = function(event) {
+                        event.preventDefault();
+                        const button = event.target.querySelector('button');
+                        button.disabled = true;
+                        button.textContent = 'Generating PDF...';
+
+                        fetch(this.action, {
+                            method: 'POST',
+                            body: new FormData(this)
+                        })
+                        .then(function(response) {
+                            if (!response.ok) throw new Error('PDF generation failed');
+                            return response.blob();
+                        })
+                        .then(function(blob) {
+                            const url = window.URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.style.display = 'none';
+                            a.href = url;
+                            // Use a timestamp to make filename unique
+                            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+                            const loanAmount = {{ loan_details.loan_amount }};
+                            a.download = 'loan_report_' + Math.floor(loanAmount) + '_' + timestamp + '.pdf';
+                            document.body.appendChild(a);
+                            a.click();
+                            window.URL.revokeObjectURL(url);
+                            document.body.removeChild(a);
+                        })
+                        .catch(function(error) {
+                            console.error('Error:', error);
+                            alert('Failed to generate PDF. Please try again.');
+                        })
+                        .finally(function() {
+                            button.disabled = false;
+                            button.textContent = 'Download PDF Report';
+                        });
+                    };
+                    </script>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

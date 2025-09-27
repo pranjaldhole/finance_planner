@@ -227,19 +227,34 @@ function updateMonthlySchedule(loanDetails) {
     });
 }
 
+function formatCurrency(amount) {
+    return new Intl.NumberFormat('de-DE', {
+        style: 'currency',
+        currency: 'EUR',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    }).format(amount);
+}
+
+function calculateLoanAmount() {
+    const propertyValue = parseFloat(document.getElementById('property_value').value) || 0;
+    const ownFunds = parseFloat(document.getElementById('own_funds').value) || 0;
+    const loanAmount = Math.max(0, propertyValue - ownFunds);
+    
+    // Update the display field with formatted currency
+    document.getElementById('loan_amount').value = formatCurrency(loanAmount);
+    return loanAmount;
+}
+
 function calculateLoan(event) {
     event.preventDefault();
     
     const propertyValue = parseFloat(document.getElementById('property_value').value);
     const ownFunds = parseFloat(document.getElementById('own_funds').value);
-    const loanAmount = propertyValue - ownFunds;
+    const loanAmount = calculateLoanAmount();
 
-    if (loanAmount < 0) {
-        alert('Own funds cannot exceed property value');
-        return false;
-    }
-    if (loanAmount === 0) {
-        alert('Loan amount cannot be zero. Own funds must be less than property value.');
+    if (loanAmount <= 0) {
+        alert('Invalid loan amount. Own funds cannot exceed or equal property value.');
         return false;
     }
 
@@ -282,7 +297,15 @@ function resetCalculator() {
     document.getElementById('loanForm').reset();
     document.getElementById('resultsContainer').style.display = 'none';
     currentLoanDetails = null;
+    calculateLoanAmount(); // Reset the loan amount display
 }
+
+// Add event listeners for property value and own funds inputs
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('property_value').addEventListener('input', calculateLoanAmount);
+    document.getElementById('own_funds').addEventListener('input', calculateLoanAmount);
+    calculateLoanAmount(); // Calculate initial loan amount
+});
 
 function generatePDF() {
     if (!currentLoanDetails) {
@@ -308,8 +331,8 @@ function generatePDF() {
     pdf.setFontSize(12);
     
     const details = [
-        `Property Value: ${formatCurrency(propertyValue)}`,
-        `Own Funds: ${formatCurrency(ownFunds)}`,
+        `Property Value: ${formatCurrency(document.getElementById('property_value').value)}`,
+        `Own Funds: ${formatCurrency(document.getElementById('own_funds').value)}`,
         `Loan Amount: ${formatCurrency(currentLoanDetails.loan_amount)}`,
         `Annual Interest Rate: ${currentLoanDetails.annual_interest_rate.toFixed(2)}%`,
         `Monthly Payment: ${formatCurrency(currentLoanDetails.monthly_payment)}`,

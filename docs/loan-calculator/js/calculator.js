@@ -416,6 +416,27 @@ function generatePDF() {
                 body: yearlyData,
                 startY: 30
             });
+            // Add monthly schedule
+            pdf.addPage();
+            pdf.setFontSize(14);
+            pdf.text('Monthly Amortization Schedule', 20, 20);
+
+            const monthlyData = currentLoanDetails.amortization_schedule.map(payment => ([
+                payment.month,
+                formatCurrency(payment.principal_payment),
+                formatCurrency(payment.interest_payment),
+                formatCurrency(payment.remaining_balance),
+                formatCurrency(payment.extra_payment)
+            ]));
+
+            pdf.autoTable({
+                head: [['Month', 'Principal Payment', 'Interest Payment', 'Remaining Balance', 'Extra Payment']],
+                body: monthlyData,
+                startY: 30,
+                styles: { fontSize: 8 },
+                headStyles: { fillColor: [22, 160, 133] },
+                alternateRowStyles: { fillColor: [238, 238, 238] }
+            });
 
             // Save the PDF
             const timestamp = new Date().toISOString().replace(/[:.]/g, '-');

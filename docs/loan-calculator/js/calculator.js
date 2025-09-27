@@ -81,6 +81,8 @@ function updateResults(loanDetails) {
     // Update loan details
     const loanDetailsList = document.getElementById('loanDetailsList');
     loanDetailsList.innerHTML = `
+        <li class="list-group-item">Property Value: ${formatCurrency(propertyValue)}</li>
+        <li class="list-group-item">Own Funds: ${formatCurrency(ownFunds)}</li>
         <li class="list-group-item">Loan Amount: ${formatCurrency(loanDetails.loan_amount)}</li>
         <li class="list-group-item">Annual Interest Rate: ${loanDetails.annual_interest_rate.toFixed(2)}%</li>
         <li class="list-group-item">Monthly Payment: ${formatCurrency(loanDetails.monthly_payment)}</li>
@@ -228,7 +230,19 @@ function updateMonthlySchedule(loanDetails) {
 function calculateLoan(event) {
     event.preventDefault();
     
-    const loanAmount = parseFloat(document.getElementById('loan_amount').value);
+    const propertyValue = parseFloat(document.getElementById('property_value').value);
+    const ownFunds = parseFloat(document.getElementById('own_funds').value);
+    const loanAmount = propertyValue - ownFunds;
+
+    if (loanAmount < 0) {
+        alert('Own funds cannot exceed property value');
+        return false;
+    }
+    if (loanAmount === 0) {
+        alert('Loan amount cannot be zero. Own funds must be less than property value.');
+        return false;
+    }
+
     const annualInterestRate = parseFloat(document.getElementById('annual_interest_rate').value);
     const monthlyPayment = parseFloat(document.getElementById('monthly_payment').value);
     const includeExtra = document.getElementById('include_extra').checked;
@@ -294,6 +308,8 @@ function generatePDF() {
     pdf.setFontSize(12);
     
     const details = [
+        `Property Value: ${formatCurrency(propertyValue)}`,
+        `Own Funds: ${formatCurrency(ownFunds)}`,
         `Loan Amount: ${formatCurrency(currentLoanDetails.loan_amount)}`,
         `Annual Interest Rate: ${currentLoanDetails.annual_interest_rate.toFixed(2)}%`,
         `Monthly Payment: ${formatCurrency(currentLoanDetails.monthly_payment)}`,

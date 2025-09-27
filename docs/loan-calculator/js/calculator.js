@@ -90,7 +90,6 @@ function updateResults(loanDetails) {
         <li class="list-group-item">Monthly Payment: ${formatCurrency(loanDetails.monthly_payment)}</li>
         <li class="list-group-item">Original Term: ${(loanDetails.original_term_months/12).toFixed(1)} years</li>
         <li class="list-group-item">Actual Term: ${(loanDetails.amortization_schedule.length/12).toFixed(1)} years</li>
-        ${loanDetails.fixed_period_years ? `<li class="list-group-item">Remaining After Fixed Period: ${formatCurrency(loanDetails.fixed_period_remaining)}</li>` : ''}
     `;
 
     // Update payment summary

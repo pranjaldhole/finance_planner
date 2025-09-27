@@ -287,6 +287,9 @@ function calculateLoan(event) {
             errorMsgElem.textContent = 'Monthly payment is too low. The loan would never be paid off. Please enter a higher monthly payment.';
             errorMsgElem.classList.remove('d-none');
             document.getElementById('resultsContainer').style.display = 'none';
+            // Retain all entered field values (no reset or reload)
+            // Focus the monthly payment field for user convenience
+            document.getElementById('monthly_payment').focus();
             return false;
         }
 
@@ -322,6 +325,8 @@ function calculateLoan(event) {
         errorMsgElem.textContent = 'Error calculating loan: ' + error.message;
         errorMsgElem.classList.remove('d-none');
         document.getElementById('resultsContainer').style.display = 'none';
+        // Focus the monthly payment field for user convenience
+        document.getElementById('monthly_payment').focus();
         return false;
     }
 }

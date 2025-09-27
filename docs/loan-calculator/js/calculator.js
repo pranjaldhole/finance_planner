@@ -284,8 +284,9 @@ function calculateLoan(event) {
         try {
             loanTermYears = calculateLoanTerm(loanAmount, annualInterestRate, monthlyPayment);
         } catch (e) {
-            errorMsgElem.textContent = 'Monthly payment is too low. The loan would never be paid off.';
+            errorMsgElem.textContent = 'Monthly payment is too low. The loan would never be paid off. Please enter a higher monthly payment.';
             errorMsgElem.classList.remove('d-none');
+            document.getElementById('resultsContainer').style.display = 'none';
             return false;
         }
 
@@ -304,6 +305,8 @@ function calculateLoan(event) {
         if (loanTermYears > 50) {
             errorMsgElem.textContent = 'Warning: The monthly payment is very low. The loan term exceeds 50 years.';
             errorMsgElem.classList.remove('d-none');
+        } else {
+            errorMsgElem.classList.add('d-none');
         }
 
         // Update the results
@@ -318,6 +321,7 @@ function calculateLoan(event) {
     } catch (error) {
         errorMsgElem.textContent = 'Error calculating loan: ' + error.message;
         errorMsgElem.classList.remove('d-none');
+        document.getElementById('resultsContainer').style.display = 'none';
         return false;
     }
 }

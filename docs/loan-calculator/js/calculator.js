@@ -273,7 +273,22 @@ function calculateLoan(event) {
     const fixedPeriod = document.getElementById('fixed_period').value;
     const fixedPeriodYears = fixedPeriod ? parseInt(fixedPeriod) : null;
 
+    // Hide previous error message
+    const errorMsgElem = document.getElementById('loanErrorMsg');
+    errorMsgElem.classList.add('d-none');
+    errorMsgElem.textContent = '';
+
     try {
+        // Calculate loan term first to check for errors
+        let loanTermYears;
+        try {
+            loanTermYears = calculateLoanTerm(loanAmount, annualInterestRate, monthlyPayment);
+        } catch (e) {
+            errorMsgElem.textContent = 'Monthly payment is too low. The loan would never be paid off.';
+            errorMsgElem.classList.remove('d-none');
+            return false;
+        }
+
         // Calculate loan details
         const loanDetails = calculateLoanPayments(
             loanAmount,
@@ -283,9 +298,13 @@ function calculateLoan(event) {
             includeExtra
         );
 
-        // Add original term information
-        const loanTermYears = calculateLoanTerm(loanAmount, annualInterestRate, monthlyPayment);
         loanDetails.original_term_months = loanTermYears * 12;
+
+        // If loan term is extremely long (e.g. > 50 years), show warning
+        if (loanTermYears > 50) {
+            errorMsgElem.textContent = 'Warning: The monthly payment is very low. The loan term exceeds 50 years.';
+            errorMsgElem.classList.remove('d-none');
+        }
 
         // Update the results
         updateResults(loanDetails);
@@ -297,7 +316,8 @@ function calculateLoan(event) {
         
         return false;
     } catch (error) {
-        alert('Error calculating loan: ' + error.message);
+        errorMsgElem.textContent = 'Error calculating loan: ' + error.message;
+        errorMsgElem.classList.remove('d-none');
         return false;
     }
 }
@@ -416,6 +436,7 @@ function generatePDF() {
                 body: yearlyData,
                 startY: 30
             });
+
             // Add monthly schedule
             pdf.addPage();
             pdf.setFontSize(14);

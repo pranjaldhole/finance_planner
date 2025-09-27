@@ -41,6 +41,7 @@
                     <h1 class="text-center mb-4">Loan Calculator</h1>
                     <form id="loanForm" onsubmit="return calculateLoan(event)">
                         <div class="mb-3">
+                        <div id="loanErrorMsg" class="alert alert-danger d-none" role="alert"></div>
                             <label for="property_value" class="form-label">Property Value (€)</label>
                             <input type="number" class="form-control" id="property_value" name="property_value" step="0.01" required>
                         </div>

@@ -67,10 +67,6 @@ function calculateLoanPayments(loanAmount, annualInterestRate, monthlyPayment, f
     };
 }
 
-function formatCurrency(amount) {
-    return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(amount);
-}
-
 function updateResults(loanDetails) {
     // Store loan details for PDF generation
     currentLoanDetails = loanDetails;
@@ -81,8 +77,8 @@ function updateResults(loanDetails) {
     // Update loan details
     const loanDetailsList = document.getElementById('loanDetailsList');
     loanDetailsList.innerHTML = `
-        <li class="list-group-item">Property Value: ${formatCurrency(propertyValue)}</li>
-        <li class="list-group-item">Own Funds: ${formatCurrency(ownFunds)}</li>
+        <li class="list-group-item">Property Value: ${formatCurrency(document.getElementById('property_value').value)}</li>
+        <li class="list-group-item">Own Funds: ${formatCurrency(document.getElementById('own_funds').value)}</li>
         <li class="list-group-item">Loan Amount: ${formatCurrency(loanDetails.loan_amount)}</li>
         <li class="list-group-item">Annual Interest Rate: ${loanDetails.annual_interest_rate.toFixed(2)}%</li>
         <li class="list-group-item">Monthly Payment: ${formatCurrency(loanDetails.monthly_payment)}</li>

@@ -131,36 +131,43 @@ function createAmortizationChart(loanDetails) {
         cumulativeInterest.push(totalInterest);
     });
 
-    const trace1 = {
-        x: months,
-        y: balances,
-        name: 'Remaining Balance',
-        type: 'scatter',
-        line: {
-            color: 'blue',
-            width: 2
-        }
-    };
-
-    const trace2 = {
+    const tracePrincipal = {
         x: months,
         y: cumulativePrincipal,
         name: 'Principal Paid',
         type: 'scatter',
-        fill: 'tonexty',
+        fill: 'tozeroy',
+        mode: 'lines',
         line: {
-            color: 'rgba(0, 255, 0, 0.3)'
-        }
+            color: 'rgba(34, 139, 34, 1)', // solid green
+            width: 2
+        },
+        fillcolor: 'rgba(34, 139, 34, 0.2)' // semi-transparent green
     };
 
-    const trace3 = {
+    const traceInterest = {
         x: months,
         y: cumulativeInterest,
         name: 'Interest Paid',
         type: 'scatter',
-        fill: 'tonexty',
+        fill: 'tozeroy',
+        mode: 'lines',
         line: {
-            color: 'rgba(255, 0, 0, 0.3)'
+            color: 'rgba(220, 20, 60, 1)', // solid red
+            width: 2
+        },
+        fillcolor: 'rgba(220, 20, 60, 0.2)' // semi-transparent red
+    };
+
+    const traceBalance = {
+        x: months,
+        y: balances,
+        name: 'Remaining Balance',
+        type: 'scatter',
+        mode: 'lines',
+        line: {
+            color: 'rgba(30, 144, 255, 1)', // solid blue
+            width: 3
         }
     };
 
@@ -172,10 +179,13 @@ function createAmortizationChart(loanDetails) {
         yaxis: {
             title: 'Amount (€)',
             tickformat: ',.0f'
+        },
+        legend: {
+            bgcolor: 'rgba(255,255,255,0.7)'
         }
     };
 
-    Plotly.newPlot('amortizationChart', [trace1, trace2, trace3], layout);
+    Plotly.newPlot('amortizationChart', [tracePrincipal, traceInterest, traceBalance], layout);
 }
 
 function updateYearlySummary(loanDetails) {

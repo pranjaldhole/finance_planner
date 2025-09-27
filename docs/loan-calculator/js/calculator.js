@@ -98,12 +98,9 @@ function updateResults(loanDetails) {
     paymentSummaryList.innerHTML = `
         <li class="list-group-item">Total Payment: ${formatCurrency(loanDetails.total_payment)}</li>
         <li class="list-group-item">Total Interest: ${formatCurrency(loanDetails.total_interest)}</li>
+        ${loanDetails.annual_extra_payment > 0 ? `<li class="list-group-item">Annual Extra Payment: ${formatCurrency(loanDetails.annual_extra_payment)}</li>` : ''}
+        ${loanDetails.fixed_period_years ? `<li class="list-group-item">Remaining After Fixed Period: ${formatCurrency(loanDetails.fixed_period_remaining)}</li>` : ''}
     `;
-    if (loanDetails.annual_extra_payment > 0) {
-        paymentSummaryList.innerHTML += `
-            <li class="list-group-item">Annual Extra Payment: ${formatCurrency(loanDetails.annual_extra_payment)}</li>
-        `;
-    }
 
     // Create the amortization chart
     createAmortizationChart(loanDetails);

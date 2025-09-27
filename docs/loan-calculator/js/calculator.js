@@ -17,6 +17,9 @@ function calculateLoanPayments(loanAmount, annualInterestRate, monthlyPayment, f
     // Use 5% of loan amount for annual extra payment, matching Python
     const annualExtraPayment = includeExtraPayment ? loanAmount * 0.05 : 0;
 
+    let fixedPeriodRemaining = 0;
+    const fixedPeriodMonths = fixedPeriodYears ? fixedPeriodYears * 12 : null;
+
     while (balance > 0) {
         const interestPayment = balance * monthlyRate;
         let principalPayment = monthlyPayment - interestPayment;
@@ -49,8 +52,9 @@ function calculateLoanPayments(loanAmount, annualInterestRate, monthlyPayment, f
             remaining_balance: balance
         });
 
-        if (month === fixedPeriodYears * 12) {
-            break;
+        // Record remaining balance at end of fixed period, but do not break loop
+        if (fixedPeriodMonths && month === fixedPeriodMonths) {
+            fixedPeriodRemaining = balance;
         }
 
         month++;
@@ -65,7 +69,7 @@ function calculateLoanPayments(loanAmount, annualInterestRate, monthlyPayment, f
         total_interest: totalInterest,
         annual_extra_payment: annualExtraPayment,
         fixed_period_years: fixedPeriodYears,
-        fixed_period_remaining: fixedPeriodYears ? balance : 0
+        fixed_period_remaining: fixedPeriodMonths ? fixedPeriodRemaining : 0
     };
 }
 

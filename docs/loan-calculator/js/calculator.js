@@ -14,7 +14,8 @@ function calculateLoanPayments(loanAmount, annualInterestRate, monthlyPayment, f
     const schedule = [];
     let totalPayment = 0;
     let totalInterest = 0;
-    const annualExtraPayment = includeExtraPayment ? monthlyPayment : 0;
+    // Use 5% of loan amount for annual extra payment, matching Python
+    const annualExtraPayment = includeExtraPayment ? loanAmount * 0.05 : 0;
 
     while (balance > 0) {
         const interestPayment = balance * monthlyRate;
@@ -22,8 +23,9 @@ function calculateLoanPayments(loanAmount, annualInterestRate, monthlyPayment, f
         let extraPayment = 0;
 
         // Add extra payment in December if enabled
-        if (includeExtraPayment && month % 12 === 0) {
-            extraPayment = annualExtraPayment;
+        if (includeExtraPayment && month % 12 === 0 && balance > 0) {
+            // Only pay up to remaining balance
+            extraPayment = Math.min(annualExtraPayment, balance - principalPayment);
             principalPayment += extraPayment;
         }
 

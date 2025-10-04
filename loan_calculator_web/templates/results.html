@@ -58,6 +58,9 @@
                                 {% if loan_details.fixed_period_remaining is defined %}
                                 <li class="list-group-item">Remaining After Fixed Period: €{{ "{:,.2f}".format(loan_details.fixed_period_remaining) }}</li>
                                 {% endif %}
+                                {% if loan_details.fixed_period_interest is defined %}
+                                <li class="list-group-item">Interest Paid During Fixed Period: €{{ "{:,.2f}".format(loan_details.fixed_period_interest) }}</li>
+                                {% endif %}
                             </ul>
                         </div>
                     </div>

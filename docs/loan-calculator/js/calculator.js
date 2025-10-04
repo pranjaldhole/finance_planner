@@ -14,6 +14,7 @@ function calculateLoanPayments(loanAmount, annualInterestRate, monthlyPayment, f
     const schedule = [];
     let totalPayment = 0;
     let totalInterest = 0;
+    let fixedPeriodInterest = 0;
     // Use 5% of loan amount for annual extra payment, matching Python
     const annualExtraPayment = includeExtraPayment ? loanAmount * 0.05 : 0;
 
@@ -22,6 +23,10 @@ function calculateLoanPayments(loanAmount, annualInterestRate, monthlyPayment, f
 
     while (balance > 0) {
         const interestPayment = balance * monthlyRate;
+        // Track interest paid during fixed period if specified
+        if (fixedPeriodMonths && month <= fixedPeriodMonths) {
+            fixedPeriodInterest += interestPayment;
+        }
         let principalPayment = monthlyPayment - interestPayment;
         let extraPayment = 0;
 
@@ -69,7 +74,8 @@ function calculateLoanPayments(loanAmount, annualInterestRate, monthlyPayment, f
         total_interest: totalInterest,
         annual_extra_payment: annualExtraPayment,
         fixed_period_years: fixedPeriodYears,
-        fixed_period_remaining: fixedPeriodMonths ? fixedPeriodRemaining : 0
+        fixed_period_remaining: fixedPeriodMonths ? fixedPeriodRemaining : 0,
+        fixed_period_interest: fixedPeriodMonths ? fixedPeriodInterest : 0
     };
 }
 
@@ -99,6 +105,7 @@ function updateResults(loanDetails) {
         <li class="list-group-item">Total Interest: ${formatCurrency(loanDetails.total_interest)}</li>
         ${loanDetails.annual_extra_payment > 0 ? `<li class="list-group-item">Annual Extra Payment: ${formatCurrency(loanDetails.annual_extra_payment)}</li>` : ''}
         ${loanDetails.fixed_period_years ? `<li class="list-group-item">Remaining After Fixed Period: ${formatCurrency(loanDetails.fixed_period_remaining)}</li>` : ''}
+        ${loanDetails.fixed_period_interest ? `<li class="list-group-item">Interest Paid During Fixed Period: ${formatCurrency(loanDetails.fixed_period_interest)}</li>` : ''}
     `;
 
     // Create the amortization chart
@@ -393,6 +400,9 @@ function generatePDF() {
     }
     if (currentLoanDetails.fixed_period_years) {
         details.push(`Remaining After Fixed Period: ${formatCurrency(currentLoanDetails.fixed_period_remaining)}`);
+        if (currentLoanDetails.fixed_period_interest) {
+            details.push(`Interest Paid During Fixed Period: ${formatCurrency(currentLoanDetails.fixed_period_interest)}`);
+        }
     }
 
     let y = 50;

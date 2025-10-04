@@ -80,6 +80,9 @@ def save_to_pdf(loan_details, plot_path):
     if 'fixed_period_remaining' in loan_details:
         details.append(
             f'Remaining After Fixed Period: {format_currency(loan_details["fixed_period_remaining"], for_pdf=True)}')
+    # Include fixed period interest if available
+    if 'fixed_period_interest' in loan_details and loan_details['fixed_period_interest'] > 0:
+        details.append(f'Interest Paid During Fixed Period: {format_currency(loan_details["fixed_period_interest"], for_pdf=True)}')
 
     for detail in details:
         pdf.formatted_cell(0, 10, detail, ln=True)
@@ -328,6 +331,8 @@ def display_loan_summary(loan_details):
         print("=" * 50)
         print(
             f"Remaining Loan After Fixed Period: {format_currency(loan_details['fixed_period_remaining'])}")
+        if 'fixed_period_interest' in loan_details:
+            print(f"Interest Paid During Fixed Period: {format_currency(loan_details['fixed_period_interest'])}")
 
 
 def display_amortization_schedule(loan_details):
@@ -437,6 +442,7 @@ def calculate_loan_payments(loan_amount, annual_interest_rate, monthly_payment, 
     # Initialize variables for tracking
     remaining_balance = loan_amount
     total_interest = 0
+    fixed_period_interest = 0
     amortization_schedule = []
 
     # Calculate annual extra payment (5% of original loan amount)
@@ -446,6 +452,12 @@ def calculate_loan_payments(loan_amount, annual_interest_rate, monthly_payment, 
     for month in range(1, total_payments + 1):
         # Calculate interest portion of monthly payment
         interest_payment = remaining_balance * monthly_rate
+
+        # Track interest during fixed period if specified
+        if fixed_interest_period_years is not None:
+            fixed_period_months = fixed_interest_period_years * 12
+            if month <= fixed_period_months:
+                fixed_period_interest += interest_payment
 
         # Calculate principal portion of monthly payment
         principal_payment = min(
@@ -487,6 +499,7 @@ def calculate_loan_payments(loan_amount, annual_interest_rate, monthly_payment, 
         'monthly_payment': monthly_payment,
         'total_payment': total_payment,
         'total_interest': total_interest,
+        'fixed_period_interest': fixed_period_interest,
         'annual_extra_payment': annual_extra_payment if include_extra_payment else 0,
         'amortization_schedule': amortization_schedule
     }

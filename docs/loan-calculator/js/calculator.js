@@ -7,7 +7,7 @@ function calculateLoanTerm(loanAmount, annualInterestRate, monthlyPayment) {
     return Math.ceil(term / 12);
 }
 
-function calculateLoanPayments(loanAmount, annualInterestRate, monthlyPayment, fixedPeriodYears = null, includeExtraPayment = false) {
+function calculateLoanPayments(loanAmount, annualInterestRate, monthlyPayment, extra_payment_percentage, fixedPeriodYears = null, includeExtraPayment = false) {
     const monthlyRate = annualInterestRate / 12 / 100;
     let balance = loanAmount;
     let month = 1;
@@ -15,8 +15,8 @@ function calculateLoanPayments(loanAmount, annualInterestRate, monthlyPayment, f
     let totalPayment = 0;
     let totalInterest = 0;
     let fixedPeriodInterest = 0;
-    // Use 5% of loan amount for annual extra payment, matching Python
-    const annualExtraPayment = includeExtraPayment ? loanAmount * 0.05 : 0;
+    // Use extra_payment_percentage of loan amount for annual extra payment, matching Python
+    const annualExtraPayment = includeExtraPayment ? loanAmount * extra_payment_percentage : 0;
 
     let fixedPeriodRemaining = 0;
     const fixedPeriodMonths = fixedPeriodYears ? fixedPeriodYears * 12 : null;
@@ -280,6 +280,8 @@ function calculateLoan(event) {
     const includeExtra = document.getElementById('include_extra').checked;
     const fixedPeriod = document.getElementById('fixed_period').value;
     const fixedPeriodYears = fixedPeriod ? parseInt(fixedPeriod) : null;
+    // if includeExtra is checked, take extra payment percentage from the specified value
+    const extra_payment_percentage = includeExtra ? (parseFloat(document.getElementById('extra_payment_percentage').value) / 100) : 0;
 
     // Hide previous error message
     const errorMsgElem = document.getElementById('loanErrorMsg');
@@ -306,6 +308,7 @@ function calculateLoan(event) {
             loanAmount,
             annualInterestRate,
             monthlyPayment,
+            extra_payment_percentage,
             fixedPeriodYears,
             includeExtra
         );

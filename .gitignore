@@ -212,3 +212,10 @@ __marimo__/
 *.log
 *.out
 *.toc
+
+# Temporary directories for Jekyll site builds
+_site/
+.jekyll-cache/
+.sass-cache/
+.bundle/
+.cache/

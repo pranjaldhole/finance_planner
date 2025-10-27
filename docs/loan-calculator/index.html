@@ -62,8 +62,12 @@
                             <input type="number" class="form-control" id="monthly_payment" name="monthly_payment" required min="1" step="any">
                         </div>
                         <div class="mb-3 form-check">
-                            <input type="checkbox" class="form-check-input" id="include_extra" name="include_extra" value="true">
-                            <label class="form-check-label" for="include_extra">Include annual extra payment (5% of loan amount)</label>
+                            <input type="checkbox" class="form-check-input" id="include_extra" name="include_extra" value="true" onchange="document.getElementById('extraPaymentContainer').style.display = this.checked ? 'block' : 'none';">
+                            <label class="form-check-label" for="include_extra">Include annual extra payment</label>
+                        </div>
+                        <div id="extraPaymentContainer" class="mb-3" style="display: none;">
+                            <label for="extra_payment_percentage" class="form-label">Extra Payment (% of loan amount annually)</label>
+                            <input type="number" class="form-control" id="extra_payment_percentage" name="extra_payment_percentage" min="0" max="100" step="0.1" value="5">
                         </div>
                         <div class="mb-3">
                             <label for="fixed_period" class="form-label">Fixed Interest Period (Years, optional)</label>

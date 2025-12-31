@@ -2,7 +2,18 @@
 
 Repository containing calculators for financial planning
 
-# Home loan calculator
+## Calculators
+
+### 1. Standard Loan Calculator
+- Calculate loan payments, interest, and amortization schedules
+- Supports extra payments and fixed interest periods
+- Location: `docs/loan-calculator.html`
+
+### 2. Loan Disbursement Calculator
+- Explore payout options for banks during loan disbursal phases
+- Supports phased disbursements over time with interest accrual on disbursed amounts
+- Features: EMI calculations, extra payments, fixed interest periods, timeline visualization
+- Location: `docs/loan-disbursement.html`
 
 ## Local testing (docs)
 

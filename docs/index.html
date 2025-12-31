@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Finance Planner</title>
-    <meta http-equiv="refresh" content="0; url=loan-calculator.html">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
@@ -16,12 +15,40 @@
             max-width: 800px;
             margin: 0 auto;
         }
+        .card {
+            margin: 1rem 0;
+            transition: transform 0.2s;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Finance Planner</h1>
-        <p>If you are not redirected automatically, <a href="loan-calculator.html">click here</a> to access the Loan Calculator.</p>
+        <p class="lead">Choose a calculator to get started</p>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Loan Calculator</h5>
+                        <p class="card-text">Calculate loan payments, interest, and amortization schedules for standard loans.</p>
+                        <a href="loan-calculator.html" class="btn btn-primary">Open Loan Calculator</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Loan Disbursement Calculator</h5>
+                        <p class="card-text">Explore payout options for banks during loan disbursal phases with customizable timing and amounts.</p>
+                        <a href="loan-disbursement.html" class="btn btn-primary">Open Disbursement Calculator</a>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </body>
 </html>

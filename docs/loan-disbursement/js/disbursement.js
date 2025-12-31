@@ -133,7 +133,7 @@ function updateResults(disbursementDetails) {
     loanSummaryList.innerHTML = `
         <li class="list-group-item">Total Loan Amount: ${formatCurrency(disbursementDetails.total_loan_amount)}</li>
         <li class="list-group-item">Annual Interest Rate: ${disbursementDetails.annual_interest_rate.toFixed(2)}%</li>
-        <li class="list-group-item">Monthly Payment (EMI): ${formatCurrency(disbursementDetails.monthly_payment)}</li>
+        <li class="list-group-item">Monthly Payment: ${formatCurrency(disbursementDetails.monthly_payment)}</li>
         <li class="list-group-item">Original Term: ${Math.ceil(disbursementDetails.amortization_schedule.filter(p => p.principal_payment > 0).length / 12)} years</li>
         <li class="list-group-item">Actual Term: ${Math.ceil(disbursementDetails.amortization_schedule.filter(p => p.principal_payment > 0).length / 12)} years</li>
         ${disbursementDetails.fixed_period_years ? `<li class="list-group-item">Fixed Interest Period: ${disbursementDetails.fixed_period_years} years</li>` : ''}
@@ -474,7 +474,7 @@ function generatePDF() {
     const details = [
         `Total Loan Amount: ${formatCurrency(currentDisbursementDetails.total_loan_amount)}`,
         `Annual Interest Rate: ${currentDisbursementDetails.annual_interest_rate.toFixed(2)}%`,
-        `Monthly Payment (EMI): ${formatCurrency(currentDisbursementDetails.monthly_payment)}`,
+        `Monthly Payment: ${formatCurrency(currentDisbursementDetails.monthly_payment)}`,
         `Original Loan Term: ${Math.ceil(currentDisbursementDetails.original_term_months/12)} years`,
         `Actual Loan Term: ${Math.ceil(currentDisbursementDetails.amortization_schedule.filter(p => p.principal_payment > 0).length / 12)} years`,
         `Total of Payments: ${formatCurrency(currentDisbursementDetails.total_payment)}`,
@@ -529,7 +529,7 @@ function generatePDF() {
     ]));
 
     pdf.autoTable({
-        head: [['Month', 'EMI', 'Principal', 'Interest', 'Balance', 'Disbursements']],
+        head: [['Month', 'Monthly payment', 'Principal', 'Interest', 'Balance', 'Disbursements']],
         body: monthlyData,
         startY: 30,
         styles: { fontSize: 8 },

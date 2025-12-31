@@ -108,7 +108,8 @@ function calculateDisbursementLoanPayments(totalLoanAmount, annualInterestRate, 
         fixed_period_years: fixedPeriodYears,
         fixed_period_remaining: fixedPeriodMonths ? fixedPeriodRemaining : 0,
         fixed_period_interest: fixedPeriodMonths ? fixedPeriodInterest : 0,
-        disbursement_schedule: disbursementSchedule
+        disbursement_schedule: disbursementSchedule,
+        original_term_months: calculateLoanTerm(totalLoanAmount, annualInterestRate, monthlyPayment) * 12
     };
     console.log('calculateDisbursementLoanPayments returning object with amortization_schedule length:', schedule.length);
 }
@@ -131,10 +132,12 @@ function updateResults(disbursementDetails) {
     // Update loan summary
     const loanSummaryList = document.getElementById('loanSummaryList');
     loanSummaryList.innerHTML = `
+        <li class="list-group-item">Property Value: ${formatCurrency(document.getElementById('property_value').value)}</li>
+        <li class="list-group-item">Own Funds: ${formatCurrency(document.getElementById('own_funds').value)}</li>
         <li class="list-group-item">Total Loan Amount: ${formatCurrency(disbursementDetails.total_loan_amount)}</li>
         <li class="list-group-item">Annual Interest Rate: ${disbursementDetails.annual_interest_rate.toFixed(2)}%</li>
         <li class="list-group-item">Monthly Payment: ${formatCurrency(disbursementDetails.monthly_payment)}</li>
-        <li class="list-group-item">Original Term: ${Math.ceil(disbursementDetails.amortization_schedule.filter(p => p.principal_payment > 0).length / 12)} years</li>
+        <li class="list-group-item">Original Term: ${Math.ceil(disbursementDetails.original_term_months / 12)} years</li>
         <li class="list-group-item">Actual Term: ${Math.ceil(disbursementDetails.amortization_schedule.filter(p => p.principal_payment > 0).length / 12)} years</li>
         ${disbursementDetails.fixed_period_years ? `<li class="list-group-item">Fixed Interest Period: ${disbursementDetails.fixed_period_years} years</li>` : ''}
     `;
@@ -338,10 +341,28 @@ function formatCurrency(amount) {
     }).format(amount);
 }
 
+function calculateLoanAmount() {
+    const propertyValue = parseFloat(document.getElementById('property_value').value) || 0;
+    const ownFunds = parseFloat(document.getElementById('own_funds').value) || 0;
+    const loanAmount = Math.max(0, propertyValue - ownFunds);
+    
+    // Update the display field with formatted currency
+    document.getElementById('total_loan_amount').value = formatCurrency(loanAmount);
+    return loanAmount;
+}
+
 function calculateDisbursement(event) {
     event.preventDefault();
 
-    const totalLoanAmount = parseFloat(document.getElementById('total_loan_amount').value);
+    const propertyValue = parseFloat(document.getElementById('property_value').value);
+    const ownFunds = parseFloat(document.getElementById('own_funds').value);
+    const totalLoanAmount = calculateLoanAmount();
+
+    if (totalLoanAmount <= 0) {
+        alert('Invalid loan amount. Own funds cannot exceed or equal property value.');
+        return false;
+    }
+
     const annualInterestRate = parseFloat(document.getElementById('annual_interest_rate').value);
     const monthlyPayment = parseFloat(document.getElementById('monthly_payment').value);
     const includeExtra = document.getElementById('include_extra').checked;

@@ -46,8 +46,12 @@
                             <input type="number" class="form-control" id="property_price" name="property_price" step="0.01" required>
                         </div>
                         <div class="mb-3">
-                            <label for="own_funds" class="form-label">Own Funds / Investment Capital (€)</label>
+                            <label for="own_funds" class="form-label">Own Funds (Down Payment) (€)</label>
                             <input type="number" class="form-control" id="own_funds" name="own_funds" step="0.01" required onchange="updateLoanAmount()">
+                        </div>
+                        <div class="mb-3">
+                            <label for="investment_capital" class="form-label">Investment Capital (Initial ETF) (€)</label>
+                            <input type="number" class="form-control" id="investment_capital" name="investment_capital" step="0.01" required>
                         </div>
                         <div class="mb-3">
                             <label for="loan_amount" class="form-label">Loan Amount (€)</label>
@@ -72,6 +76,10 @@
                         <div class="mb-3">
                             <label for="property_appreciation" class="form-label">Property Appreciation Rate (% per year)</label>
                             <input type="number" class="form-control" id="property_appreciation" name="property_appreciation" step="0.01" value="3" required>
+                        </div>
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="divide_property" name="divide_property">
+                            <label class="form-check-label" for="divide_property">Divide property amongst two owners</label>
                         </div>
                         <div class="text-center">
                             <button type="submit" class="btn btn-primary">Calculate</button>
@@ -108,7 +116,7 @@
                                     <tr>
                                         <th>Year</th>
                                         <th>Property Value</th>
-                                        <th>ETF (with Own Funds)</th>
+                                        <th>ETF (with Investment Capital)</th>
                                         <th>ETF (from Scratch)</th>
                                         <th>Buying Net Worth</th>
                                         <th>Renting Net Worth</th>

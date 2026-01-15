@@ -49,7 +49,12 @@ function calculateLoanBalance(loanAmount, annualInterestRate, monthlyPayment, mo
     return Math.max(0, balance);
 }
 
-function findBreakEvenMonths(propertyPrice, ownFunds, monthlyInvest, etfGains, propertyApp) {
+function calculateBuyingNetWorth(propValue, loanBalance, etf2Value, divideProperty) {
+    const equity = propValue - loanBalance;
+    return divideProperty ? (equity / 2) + etf2Value : equity + etf2Value;
+}
+
+function findBreakEvenMonths(propertyPrice, investmentCapital, monthlyInvest, etfGains, propertyApp) {
     const monthlyEtfRate = etfGains / 12 / 100;
     const monthlyPropRate = propertyApp / 12 / 100;
     
@@ -60,7 +65,7 @@ function findBreakEvenMonths(propertyPrice, ownFunds, monthlyInvest, etfGains, p
     
     while (low <= high) {
         const mid = Math.floor((low + high) / 2);
-        const etfValue = calculateFutureValue(ownFunds, monthlyInvest, etfGains, mid);
+        const etfValue = calculateFutureValue(investmentCapital, monthlyInvest, etfGains, mid);
         const propValue = calculatePropertyValue(propertyPrice, propertyApp, mid);
         
         if (etfValue >= propValue) {
@@ -79,11 +84,13 @@ function calculateComparison(event) {
     
     const propertyPrice = parseFloat(document.getElementById('property_price').value);
     const ownFunds = parseFloat(document.getElementById('own_funds').value);
+    const investmentCapital = parseFloat(document.getElementById('investment_capital').value);
     const loanInterest = parseFloat(document.getElementById('loan_interest').value);
     const monthlyRent = parseFloat(document.getElementById('monthly_rent').value);
     const monthlyEtfInvest = parseFloat(document.getElementById('monthly_etf_invest').value);
     const yearlyEtfGains = parseFloat(document.getElementById('yearly_etf_gains').value);
     const propertyAppreciation = parseFloat(document.getElementById('property_appreciation').value);
+    const divideProperty = document.getElementById('divide_property').checked;
     
     // Hide previous error message
     const errorMsgElem = document.getElementById('errorMsg');
@@ -91,23 +98,25 @@ function calculateComparison(event) {
     
     try {
         // Calculate break-even point
-        const breakEvenMonths = findBreakEvenMonths(propertyPrice, ownFunds, monthlyEtfInvest, yearlyEtfGains, propertyAppreciation);
+        const breakEvenMonths = findBreakEvenMonths(propertyPrice, investmentCapital, monthlyEtfInvest, yearlyEtfGains, propertyAppreciation);
         const breakEvenYears = breakEvenMonths / 12;
         
         // Calculate values at break-even
-        const etfValue = calculateFutureValue(ownFunds, monthlyEtfInvest, yearlyEtfGains, breakEvenMonths);
+        const etfValue = calculateFutureValue(investmentCapital, monthlyEtfInvest, yearlyEtfGains, breakEvenMonths);
         const propValue = calculatePropertyValue(propertyPrice, propertyAppreciation, breakEvenMonths);
         
         // Store results
         currentResults = {
             propertyPrice,
             ownFunds,
+            investmentCapital,
             loanAmount: propertyPrice - ownFunds,
             loanInterest,
             monthlyRent,
             monthlyEtfInvest,
             yearlyEtfGains,
             propertyAppreciation,
+            divideProperty,
             breakEvenMonths,
             breakEvenYears,
             etfValueAtBreakEven: etfValue,
@@ -139,13 +148,15 @@ function updateResults(results) {
     const inputSummaryList = document.getElementById('inputSummaryList');
     inputSummaryList.innerHTML = `
         <li class="list-group-item">Property Price: ${formatCurrency(results.propertyPrice)}</li>
-        <li class="list-group-item">Own Funds: ${formatCurrency(results.ownFunds)}</li>
+        <li class="list-group-item">Own Funds (Down Payment): ${formatCurrency(results.ownFunds)}</li>
+        <li class="list-group-item">Investment Capital (Initial ETF): ${formatCurrency(results.investmentCapital)}</li>
         <li class="list-group-item">Loan Amount: ${formatCurrency(results.loanAmount)}</li>
         <li class="list-group-item">Loan Interest Rate: ${results.loanInterest.toFixed(2)}%</li>
         <li class="list-group-item">Monthly Rent: ${formatCurrency(results.monthlyRent)}</li>
         <li class="list-group-item">Monthly ETF Investment: ${formatCurrency(results.monthlyEtfInvest)}</li>
         <li class="list-group-item">Yearly ETF Gains: ${results.yearlyEtfGains.toFixed(2)}%</li>
         <li class="list-group-item">Property Appreciation: ${results.propertyAppreciation.toFixed(2)}%</li>
+        <li class="list-group-item">Divide Property Amongst Two Owners: ${results.divideProperty ? 'Yes' : 'No'}</li>
     `;
     
     // Update break-even analysis
@@ -175,20 +186,20 @@ function updateChart(results) {
     for (let year = 0; year <= maxYears; year++) {
         const months = year * 12;
         years.push(year);
-        const etf1Value = calculateFutureValue(results.ownFunds, results.monthlyEtfInvest, results.yearlyEtfGains, months);
+        const etf1Value = calculateFutureValue(results.investmentCapital, results.monthlyEtfInvest, results.yearlyEtfGains, months);
         etf1Values.push(etf1Value);
         const etf2Value = calculateFutureValueNoInitial(results.monthlyEtfInvest, results.yearlyEtfGains, months);
         etf2Values.push(etf2Value);
         const propValue = calculatePropertyValue(results.propertyPrice, results.propertyAppreciation, months);
         propValues.push(propValue);
         const loanBalance = calculateLoanBalance(results.loanAmount, results.loanInterest, results.monthlyRent, months);
-        buyingNetWorth.push(propValue - loanBalance + etf2Value);
+        buyingNetWorth.push(calculateBuyingNetWorth(propValue, loanBalance, etf2Value, results.divideProperty));
     }
     
     const traceEtf1 = {
         x: years,
         y: etf1Values,
-        name: 'ETF Portfolio (with Own Funds)',
+        name: 'ETF Portfolio (with Investment Capital)',
         type: 'scatter',
         mode: 'lines',
         line: {
@@ -225,7 +236,7 @@ function updateChart(results) {
     const traceBuyingNetWorth = {
         x: years,
         y: buyingNetWorth,
-        name: 'Buying Net Worth (Property - Loan + ETF from Scratch)',
+        name: results.divideProperty ? 'Buying Net Worth ((Property - Loan)/2 + ETF from Scratch)' : 'Buying Net Worth (Property - Loan + ETF from Scratch)',
         type: 'scatter',
         mode: 'lines',
         line: {
@@ -259,11 +270,11 @@ function updateYearlyComparison(results) {
     
     for (let year = 1; year <= maxYears; year++) {
         const months = year * 12;
-        const etf1Value = calculateFutureValue(results.ownFunds, results.monthlyEtfInvest, results.yearlyEtfGains, months);
+        const etf1Value = calculateFutureValue(results.investmentCapital, results.monthlyEtfInvest, results.yearlyEtfGains, months);
         const etf2Value = calculateFutureValueNoInitial(results.monthlyEtfInvest, results.yearlyEtfGains, months);
         const propValue = calculatePropertyValue(results.propertyPrice, results.propertyAppreciation, months);
         const loanBalance = calculateLoanBalance(results.loanAmount, results.loanInterest, results.monthlyRent, months);
-        const buyingNetWorth = propValue - loanBalance + etf2Value;
+        const buyingNetWorth = calculateBuyingNetWorth(propValue, loanBalance, etf2Value, results.divideProperty);
         const rentingNetWorth = etf1Value;
         const difference = buyingNetWorth - rentingNetWorth;
         
@@ -303,7 +314,8 @@ function generatePDF() {
     pdf.setFontSize(12);
     const inputs = [
         `Property Price: ${formatCurrency(currentResults.propertyPrice)}`,
-        `Own Funds: ${formatCurrency(currentResults.ownFunds)}`,
+        `Own Funds (Down Payment): ${formatCurrency(currentResults.ownFunds)}`,
+        `Investment Capital (Initial ETF): ${formatCurrency(currentResults.investmentCapital)}`,
         `Loan Amount: ${formatCurrency(currentResults.loanAmount)}`,
         `Loan Interest Rate: ${currentResults.loanInterest.toFixed(2)}%`,
         `Monthly Rent: ${formatCurrency(currentResults.monthlyRent)}`,
@@ -339,7 +351,7 @@ function generatePDF() {
             
             for (let year = 1; year <= maxYears; year++) {
                 const months = year * 12;
-                const etf1Value = calculateFutureValue(currentResults.ownFunds, currentResults.monthlyEtfInvest, currentResults.yearlyEtfGains, months);
+                const etf1Value = calculateFutureValue(currentResults.investmentCapital, currentResults.monthlyEtfInvest, currentResults.yearlyEtfGains, months);
                 const etf2Value = calculateFutureValueNoInitial(currentResults.monthlyEtfInvest, currentResults.yearlyEtfGains, months);
                 const propValue = calculatePropertyValue(currentResults.propertyPrice, currentResults.propertyAppreciation, months);
                 const loanBalance = calculateLoanBalance(currentResults.loanAmount, currentResults.loanInterest, currentResults.monthlyRent, months);
@@ -359,7 +371,7 @@ function generatePDF() {
             }
             
             pdf.autoTable({
-                head: [['Year', 'Property Value', 'ETF (Own Funds)', 'ETF (Scratch)', 'Buying Net Worth', 'Renting Net Worth', 'Difference']],
+                head: [['Year', 'Property Value', 'ETF (Investment Capital)', 'ETF (Scratch)', 'Buying Net Worth', 'Renting Net Worth', 'Difference']],
                 body: yearlyData,
                 startY: 30
             });

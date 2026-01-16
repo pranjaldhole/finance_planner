@@ -256,7 +256,8 @@ function updateChart(results) {
         },
         legend: {
             bgcolor: 'rgba(255,255,255,0.7)'
-        }
+        },
+        responsive: true
     };
     
     Plotly.newPlot('comparisonChart', [traceEtf1, traceEtf2, traceProperty, traceBuyingNetWorth], layout);

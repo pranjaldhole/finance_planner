@@ -268,7 +268,7 @@ function updateYearlyComparison(results) {
     
     const maxYears = Math.ceil(results.breakEvenYears) + 2;
     
-    for (let year = 1; year <= maxYears; year++) {
+    for (let year = 0; year <= maxYears; year++) {
         const months = year * 12;
         const etf1Value = calculateFutureValue(results.investmentCapital, results.monthlyEtfInvest, results.yearlyEtfGains, months);
         const etf2Value = calculateFutureValueNoInitial(results.monthlyEtfInvest, results.yearlyEtfGains, months);

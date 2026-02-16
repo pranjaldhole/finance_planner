@@ -255,8 +255,9 @@ function updatePhaseDetails(disbursementDetails) {
             <tr>
                 <td>${phase.phase}</td>
                 <td>${phase.month}</td>
-                <td>${formatCurrency(phase.amount)}</td>
-                <td colspan="2">Disbursement Phase</td>
+                <td>${formatCurrency(phase.original_amount || (phase.amount))}</td>
+                <td>${formatCurrency(phase.own_funded || 0)}</td>
+                <td>${formatCurrency(phase.amount || 0)}</td>
             </tr>
         `;
     });
@@ -348,7 +349,82 @@ function calculateLoanAmount() {
     
     // Update the display field with formatted currency
     document.getElementById('total_loan_amount').value = formatCurrency(loanAmount);
+    // Pre-fill disbursement phase amounts based on property price percentages
+    // Land 30%, Foundation 28%, Shell 12.6%, Roof 10.5%, Interior 7%
+    try {
+        precalculateDisbursements(propertyValue);
+    } catch (e) {
+        // ignore if elements not present
+    }
     return loanAmount;
+}
+
+function precalculateDisbursements(propertyValue) {
+    const defaultPct = [30, 28, 12.6, 10.5, 7];
+    const defaultDelays = [0, 8, 11, 15, 18, 21];
+
+    // Read percentages from inputs (if present) or use defaults
+    const percentages = [];
+    for (let i = 1; i <= defaultPct.length; i++) {
+        const pctEl = document.getElementById(`phase_${i}_pct`);
+        let pct = defaultPct[i - 1];
+        if (pctEl) {
+            const v = parseFloat(pctEl.value);
+            if (!isNaN(v)) {
+                pct = v;
+            } else {
+                pctEl.value = pct;
+            }
+        }
+        percentages.push(pct);
+    }
+
+    const totalPercent = percentages.reduce((s, p) => s + p, 0);
+    const remainingPercent = Math.max(0, 100 - totalPercent);
+
+    // Apply amounts and default delays for phases 1..5
+    for (let i = 1; i <= defaultPct.length; i++) {
+        const amountEl = document.getElementById(`phase_${i}_amount`);
+        const pct = percentages[i - 1] || 0;
+        const amount = (propertyValue * pct) / 100;
+        if (amountEl) {
+            if (amountEl.tagName === 'INPUT' || amountEl.tagName === 'TEXTAREA') {
+                amountEl.value = amount.toFixed(2);
+            } else {
+                amountEl.textContent = formatCurrency(amount);
+            }
+        }
+
+        // only set default delay if input is empty
+        const delayEl = document.getElementById(`phase_${i}_delay`);
+        if (delayEl && (delayEl.value === '' || delayEl.value == null)) {
+            delayEl.value = defaultDelays[i - 1];
+        }
+    }
+
+    // Phase 6 percentage is automatically calculated so total percentages == 100%
+    const phase6PctEl = document.getElementById('phase_6_pct');
+    const sumFirst5 = percentages.reduce((s, p) => s + p, 0);
+    const pct6 = Math.max(0, 100 - sumFirst5);
+    if (phase6PctEl) {
+        phase6PctEl.value = pct6.toFixed(1);
+        phase6PctEl.readOnly = true;
+    }
+
+    const remainingAmount = (propertyValue * pct6) / 100;
+    const phase6El = document.getElementById('phase_6_amount');
+    if (phase6El) {
+        if (phase6El.tagName === 'INPUT' || phase6El.tagName === 'TEXTAREA') {
+            phase6El.value = remainingAmount.toFixed(2);
+        } else {
+            phase6El.textContent = formatCurrency(remainingAmount);
+        }
+    }
+
+    const phase6DelayEl = document.getElementById('phase_6_delay');
+    if (phase6DelayEl && (phase6DelayEl.value === '' || phase6DelayEl.value == null)) {
+        phase6DelayEl.value = defaultDelays[5];
+    }
 }
 
 function calculateDisbursement(event) {
@@ -386,21 +462,43 @@ function calculateDisbursement(event) {
             return false;
         }
 
-        // Collect phase data
+        // Collect phase data (include Phase 6: Remaining Readiness on completion)
         const phases = [];
-        const phaseNames = ['Land Purchase', 'Foundation', 'Shell', 'Roof', 'Interior Work'];
+        const phaseNames = ['Land Purchase', 'Foundation', 'Shell', 'Roof', 'Interior Work', 'Completion - Remaining Readiness'];
 
-        for (let i = 1; i <= 5; i++) {
-            const month = parseInt(document.getElementById(`phase_${i}_delay`).value) || 0;
-            const amount = parseFloat(document.getElementById(`phase_${i}_amount`).value) || 0;
+        for (let i = 1; i <= 6; i++) {
+            const delayEl = document.getElementById(`phase_${i}_delay`);
+            const amtEl = document.getElementById(`phase_${i}_amount`);
+            const month = delayEl ? (parseInt(delayEl.value) || 0) : 0;
+            const amount = amtEl ? (parseFloat(amtEl.value) || 0) : 0;
 
             if (amount > 0) {
                 phases.push({
-                    phase: phaseNames[i-1],
+                    phase: phaseNames[i-1] || `Phase ${i}`,
                     month: month,
-                    amount: amount
+                    original_amount: amount,
+                    amount: amount // placeholder, will adjust for own funds
                 });
             }
+        }
+
+        // Adjust phases so that own funds cover earliest disbursements first,
+        // then remaining amounts are taken from the loan. Process phases in chronological order.
+        const phasesSorted = phases.slice().sort((a,b) => a.month - b.month);
+        let ownRemaining = parseFloat(ownFunds) || 0;
+        const adjustedPhases = [];
+        for (const p of phasesSorted) {
+            const orig = p.original_amount || 0;
+            const ownCovered = Math.min(orig, Math.max(0, ownRemaining));
+            ownRemaining = Math.max(0, ownRemaining - ownCovered);
+            const loanPortion = Math.max(0, orig - ownCovered);
+            adjustedPhases.push({
+                phase: p.phase,
+                month: p.month,
+                original_amount: orig,
+                own_funded: ownCovered,
+                amount: loanPortion
+            });
         }
 
         // Validate that we have at least one phase
@@ -411,17 +509,24 @@ function calculateDisbursement(event) {
             return false;
         }
 
-        // Validate total disbursements match loan amount
-        const totalDisbursed = phases.reduce((sum, phase) => sum + phase.amount, 0);
-        if (Math.abs(totalDisbursed - totalLoanAmount) > 0.01) {
+        // Validate total disbursements (property-level) still equal property value
+        const totalOriginal = phases.reduce((sum, phase) => sum + (phase.original_amount || phase.amount || 0), 0);
+        if (Math.abs(totalOriginal - propertyValue) > 0.01) {
             const errorMsgElem = document.getElementById('disbursementErrorMsg');
-            errorMsgElem.textContent = `Total disbursements (${formatCurrency(totalDisbursed)}) must equal total loan amount (${formatCurrency(totalLoanAmount)})`;
+            errorMsgElem.textContent = `Total phase amounts (${formatCurrency(totalOriginal)}) must equal property value (${formatCurrency(propertyValue)})`;
             errorMsgElem.classList.remove('d-none');
             return false;
         }
 
-        // Calculate disbursement schedule
-        const disbursementSchedule = phases;
+        // Now ensure loan disbursements equal loan amount after own funds allocation
+        const disbursementSchedule = adjustedPhases; // loan-funded portions only
+        const totalLoanDisbursed = disbursementSchedule.reduce((s, p) => s + (p.amount || 0), 0);
+        if (Math.abs(totalLoanDisbursed - totalLoanAmount) > 0.01) {
+            const errorMsgElem = document.getElementById('disbursementErrorMsg');
+            errorMsgElem.textContent = `Loan-funded disbursements (${formatCurrency(totalLoanDisbursed)}) must equal loan amount (${formatCurrency(totalLoanAmount)}) after applying own funds.`;
+            errorMsgElem.classList.remove('d-none');
+            return false;
+        }
         console.log('phases:', phases);
         console.log('disbursementSchedule:', disbursementSchedule);
 
@@ -512,6 +617,12 @@ function generatePDF() {
         }
     }
 
+    // Add explicit Remaining Readiness summary if Phase 6 exists
+    const remainingPhase = currentDisbursementDetails.disbursement_schedule.find(p => /Remaining Readiness|Completion - Remaining Readiness/i.test(p.phase));
+    if (remainingPhase) {
+        details.push(`Remaining Readiness (on completion month ${remainingPhase.month}): ${formatCurrency(remainingPhase.amount)}`);
+    }
+
     let y = 50;
     details.forEach(detail => {
         pdf.text(detail, 20, y);
@@ -526,11 +637,13 @@ function generatePDF() {
     const phaseData = currentDisbursementDetails.disbursement_schedule.map(phase => ([
         phase.phase,
         phase.month,
-        formatCurrency(phase.amount)
+        formatCurrency(phase.original_amount || (phase.amount)),
+        formatCurrency(phase.own_funded || 0),
+        formatCurrency(phase.amount || 0)
     ]));
 
     pdf.autoTable({
-        head: [['Phase', 'Month', 'Amount']],
+        head: [['Phase', 'Month', 'Total Amount', 'Own Funds', 'Loan Amount']],
         body: phaseData,
         startY: 30
     });
@@ -600,5 +713,33 @@ function generatePDF() {
 
     // Save the PDF
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    pdf.save(`disbursement_report_${Math.floor(currentDisbursementDetails.totalLoanAmount)}_${timestamp}.pdf`);
+    pdf.save(`disbursement_report_${Math.floor(currentDisbursementDetails.total_loan_amount)}_${timestamp}.pdf`);
 }
+
+// Initialize live updates: recalculate loan amount and precalculate disbursements
+document.addEventListener('DOMContentLoaded', () => {
+    const propEl = document.getElementById('property_value');
+    const ownEl = document.getElementById('own_funds');
+    if (propEl) {
+        propEl.addEventListener('input', calculateLoanAmount);
+    }
+    if (ownEl) {
+        ownEl.addEventListener('input', calculateLoanAmount);
+    }
+    // Recalculate amounts when percentages change
+    const pctEls = document.querySelectorAll('.phase-pct');
+    pctEls.forEach(el => el.addEventListener('input', calculateLoanAmount));
+    // Run once on load to prefill phase defaults (delays and computed pct6)
+    try {
+        const initialPropertyValue = (propEl && propEl.value) ? parseFloat(propEl.value) || 0 : 0;
+        if (typeof precalculateDisbursements === 'function') {
+            precalculateDisbursements(initialPropertyValue);
+        }
+        // Also update loan amount display if property value present
+        if (propEl && propEl.value) {
+            calculateLoanAmount();
+        }
+    } catch (e) {
+        console.warn('Prefill disbursement defaults failed:', e);
+    }
+});

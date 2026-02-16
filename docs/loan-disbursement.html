@@ -52,6 +52,7 @@
                             <label for="property_value" class="form-label">Property Value (€)</label>
                             <input type="number" class="form-control" id="property_value" name="property_value" step="0.01" required onchange="calculateLoanAmount()">
                         </div>
+
                         <div class="mb-3">
                             <label for="own_funds" class="form-label">Own Funds (€)</label>
                             <input type="number" class="form-control" id="own_funds" name="own_funds" step="0.01" required onchange="calculateLoanAmount()">
@@ -86,14 +87,18 @@
                             <div class="phase-input" data-phase="1">
                                 <h5>Phase 1: Land Purchase</h5>
                                 <div class="row">
-                                    <div class="col-md-6">
+                                    <div class="col-md-4">
                                         <label for="phase_1_delay" class="form-label">Disbursement Month</label>
                                         <input type="number" class="form-control phase-delay" id="phase_1_delay" name="phase_1_delay" min="0" step="1" value="0" required>
                                         <small class="form-text text-muted">Month 0 = loan start</small>
                                     </div>
-                                    <div class="col-md-6">
+                                    <div class="col-md-4">
+                                        <label for="phase_1_pct" class="form-label">Percentage (%)</label>
+                                        <input type="number" class="form-control phase-pct" id="phase_1_pct" name="phase_1_pct" step="0.1" value="30" required>
+                                    </div>
+                                    <div class="col-md-4">
                                         <label for="phase_1_amount" class="form-label">Disbursement Amount (€)</label>
-                                        <input type="number" class="form-control phase-amount" id="phase_1_amount" name="phase_1_amount" step="0.01" required>
+                                        <input type="number" class="form-control phase-amount" id="phase_1_amount" name="phase_1_amount" step="0.01" readonly>
                                     </div>
                                 </div>
                             </div>
@@ -101,13 +106,17 @@
                             <div class="phase-input" data-phase="2">
                                 <h5>Phase 2: Foundation</h5>
                                 <div class="row">
-                                    <div class="col-md-6">
+                                    <div class="col-md-4">
                                         <label for="phase_2_delay" class="form-label">Disbursement Month</label>
                                         <input type="number" class="form-control phase-delay" id="phase_2_delay" name="phase_2_delay" min="0" step="1" required>
                                     </div>
-                                    <div class="col-md-6">
+                                    <div class="col-md-4">
+                                        <label for="phase_2_pct" class="form-label">Percentage (%)</label>
+                                        <input type="number" class="form-control phase-pct" id="phase_2_pct" name="phase_2_pct" step="0.1" value="28" required>
+                                    </div>
+                                    <div class="col-md-4">
                                         <label for="phase_2_amount" class="form-label">Disbursement Amount (€)</label>
-                                        <input type="number" class="form-control phase-amount" id="phase_2_amount" name="phase_2_amount" step="0.01" required>
+                                        <input type="number" class="form-control phase-amount" id="phase_2_amount" name="phase_2_amount" step="0.01" readonly>
                                     </div>
                                 </div>
                             </div>
@@ -115,13 +124,17 @@
                             <div class="phase-input" data-phase="3">
                                 <h5>Phase 3: Shell</h5>
                                 <div class="row">
-                                    <div class="col-md-6">
+                                    <div class="col-md-4">
                                         <label for="phase_3_delay" class="form-label">Disbursement Month</label>
                                         <input type="number" class="form-control phase-delay" id="phase_3_delay" name="phase_3_delay" min="0" step="1" required>
                                     </div>
-                                    <div class="col-md-6">
+                                    <div class="col-md-4">
+                                        <label for="phase_3_pct" class="form-label">Percentage (%)</label>
+                                        <input type="number" class="form-control phase-pct" id="phase_3_pct" name="phase_3_pct" step="0.1" value="12.6" required>
+                                    </div>
+                                    <div class="col-md-4">
                                         <label for="phase_3_amount" class="form-label">Disbursement Amount (€)</label>
-                                        <input type="number" class="form-control phase-amount" id="phase_3_amount" name="phase_3_amount" step="0.01" required>
+                                        <input type="number" class="form-control phase-amount" id="phase_3_amount" name="phase_3_amount" step="0.01" readonly>
                                     </div>
                                 </div>
                             </div>
@@ -129,13 +142,17 @@
                             <div class="phase-input" data-phase="4">
                                 <h5>Phase 4: Roof</h5>
                                 <div class="row">
-                                    <div class="col-md-6">
+                                    <div class="col-md-4">
                                         <label for="phase_4_delay" class="form-label">Disbursement Month</label>
                                         <input type="number" class="form-control phase-delay" id="phase_4_delay" name="phase_4_delay" min="0" step="1" required>
                                     </div>
-                                    <div class="col-md-6">
+                                    <div class="col-md-4">
+                                        <label for="phase_4_pct" class="form-label">Percentage (%)</label>
+                                        <input type="number" class="form-control phase-pct" id="phase_4_pct" name="phase_4_pct" step="0.1" value="10.5" required>
+                                    </div>
+                                    <div class="col-md-4">
                                         <label for="phase_4_amount" class="form-label">Disbursement Amount (€)</label>
-                                        <input type="number" class="form-control phase-amount" id="phase_4_amount" name="phase_4_amount" step="0.01" required>
+                                        <input type="number" class="form-control phase-amount" id="phase_4_amount" name="phase_4_amount" step="0.01" readonly>
                                     </div>
                                 </div>
                             </div>
@@ -143,13 +160,35 @@
                             <div class="phase-input" data-phase="5">
                                 <h5>Phase 5: Interior Work</h5>
                                 <div class="row">
-                                    <div class="col-md-6">
+                                    <div class="col-md-4">
                                         <label for="phase_5_delay" class="form-label">Disbursement Month</label>
                                         <input type="number" class="form-control phase-delay" id="phase_5_delay" name="phase_5_delay" min="0" step="1" required>
                                     </div>
-                                    <div class="col-md-6">
+                                    <div class="col-md-4">
+                                        <label for="phase_5_pct" class="form-label">Percentage (%)</label>
+                                        <input type="number" class="form-control phase-pct" id="phase_5_pct" name="phase_5_pct" step="0.1" value="7" required>
+                                    </div>
+                                    <div class="col-md-4">
                                         <label for="phase_5_amount" class="form-label">Disbursement Amount (€)</label>
-                                        <input type="number" class="form-control phase-amount" id="phase_5_amount" name="phase_5_amount" step="0.01" required>
+                                        <input type="number" class="form-control phase-amount" id="phase_5_amount" name="phase_5_amount" step="0.01" readonly>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="phase-input" data-phase="6">
+                                <h5>Phase 6: Completion - Remaining Readiness</h5>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <label for="phase_6_delay" class="form-label">Disbursement Month (on completion)</label>
+                                        <input type="number" class="form-control phase-delay" id="phase_6_delay" name="phase_6_delay" min="0" step="1" required>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="phase_6_pct" class="form-label">Percentage (%)</label>
+                                        <input type="number" class="form-control phase-pct" id="phase_6_pct" name="phase_6_pct" step="0.1" readonly>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="phase_6_amount" class="form-label">Disbursement Amount (€) - Remaining Readiness</label>
+                                        <input type="number" class="form-control phase-amount" id="phase_6_amount" name="phase_6_amount" step="0.01" readonly>
                                     </div>
                                 </div>
                             </div>
@@ -190,8 +229,9 @@
                                     <tr>
                                         <th>Phase</th>
                                         <th>Disbursement Month</th>
-                                        <th>Disbursement Amount</th>
-                                        <th colspan="2">Notes</th>
+                                        <th>Total Amount</th>
+                                        <th>Own Funds</th>
+                                        <th>Loan Amount</th>
                                     </tr>
                                 </thead>
                                 <tbody id="phaseDetailsBody">
